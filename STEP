@@ -4,7 +4,7 @@ git clone git@github.com:zeroleo12345/russh.git
 
 mise use -g rust@1.88
 
-cargo build --verbose
+rm -rf target  && cargo build --verbose
 ```
 
 

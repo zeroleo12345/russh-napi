@@ -150,7 +150,7 @@ jobs:
           merge-multiple: true
 
       - run: yarn napi build --dts lib/native.d.ts
-      - run: rm russh.node
+      - run: rm ${{ env.APP_NAME }}.node
       - run: yarn tsc
 
       - name: Pack
