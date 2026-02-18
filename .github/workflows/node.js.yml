@@ -5,25 +5,32 @@ env:
   MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_INCREMENTAL: '1'
 
-'on':
+
+on:
   push:
-    branches:
-      - main
-    tags-ignore:
-      - '**'
-    paths-ignore:
-      - '**/*.md'
-      - LICENSE
-      - '**/*.gitignore'
-      - .editorconfig
-      - docs/**
-  pull_request: null
+  pull_request:
+    types: [opened, synchronize, labeled]
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+
 jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    if: >
+      (
+        github.event_name == 'push' &&
+        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
+      ) ||
+      (
+        github.event_name == 'pull_request' &&
+        contains(github.event.pull_request.labels.*.name, 'enhancement')
+      )
+
+
   build:
     strategy:
       fail-fast: false
@@ -74,6 +81,8 @@ jobs:
 
     name: ${{ matrix.settings.target }}
     runs-on: ${{ matrix.settings.host }}
+    needs:
+      - Lint
 
     steps:
       - uses: actions/checkout@v4

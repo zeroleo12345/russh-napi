@@ -1,4 +1,4 @@
-use russh::AgentAuthError;
+use rustssh2::AgentAuthError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -7,10 +7,10 @@ pub enum WrappedError {
     Io(#[from] std::io::Error),
 
     #[error(transparent)]
-    Russh(#[from] russh::Error),
+    Russh(#[from] rustssh2::Error),
 
     #[error(transparent)]
-    RusshKeys(#[from] russh::keys::Error),
+    RusshKeys(#[from] rustssh2::keys::Error),
 
     #[error(transparent)]
     AgentAuthError(#[from] AgentAuthError),

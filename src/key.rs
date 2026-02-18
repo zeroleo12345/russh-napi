@@ -1,7 +1,7 @@
 use crate::error::WrappedError;
 use napi::bindgen_prelude::Uint8Array;
 use napi_derive::napi;
-use russh::keys::{HashAlg, PublicKeyBase64};
+use rustssh2::keys::{HashAlg, PublicKeyBase64};
 
 #[napi]
 #[derive(Clone, Copy)]
@@ -24,7 +24,7 @@ impl From<HashAlgorithm> for Option<HashAlg> {
 #[napi]
 #[derive(Clone)]
 pub struct SshPublicKey {
-    inner: russh::keys::PublicKey,
+    inner: rustssh2::keys::PublicKey,
 }
 
 #[napi]
@@ -50,8 +50,8 @@ impl SshPublicKey {
     }
 }
 
-impl From<russh::keys::PublicKey> for SshPublicKey {
-    fn from(inner: russh::keys::PublicKey) -> Self {
+impl From<rustssh2::keys::PublicKey> for SshPublicKey {
+    fn from(inner: rustssh2::keys::PublicKey) -> Self {
         SshPublicKey { inner }
     }
 }
@@ -59,7 +59,7 @@ impl From<russh::keys::PublicKey> for SshPublicKey {
 #[napi]
 #[derive(Clone)]
 pub struct SshKeyPair {
-    pub(crate) inner: russh::keys::PrivateKey,
+    pub(crate) inner: rustssh2::keys::PrivateKey,
 }
 
 #[napi]
@@ -72,8 +72,8 @@ impl SshKeyPair {
 
 #[napi]
 pub fn parse_key(data: String, password: Option<String>) -> napi::Result<SshKeyPair> {
-    russh::keys::decode_secret_key(&data, password.as_deref())
-        .map_err(|e| WrappedError::from(russh::Error::from(e)).into())
+    rustssh2::keys::decode_secret_key(&data, password.as_deref())
+        .map_err(|e| WrappedError::from(rustssh2::Error::from(e)).into())
         .map(|key| SshKeyPair { inner: key })
 }
 
@@ -89,13 +89,13 @@ pub fn is_pageant_running() -> bool {
 /// Parse a public key from OpenSSH format string (e.g., "ssh-ed25519 AAAA... comment")
 #[napi]
 pub fn parse_public_key(data: String) -> napi::Result<SshPublicKey> {
-    russh::keys::PublicKey::from_openssh(&data)
-        .map_err(|e| WrappedError::from(russh::Error::from(e)).into())
+    rustssh2::keys::PublicKey::from_openssh(&data)
+        .map_err(|e| WrappedError::from(rustssh2::Error::from(e)).into())
         .map(|key| SshPublicKey { inner: key })
 }
 
 impl SshPublicKey {
-    pub fn inner(&self) -> &russh::keys::PublicKey {
+    pub fn inner(&self) -> &rustssh2::keys::PublicKey {
         &self.inner
     }
 }
