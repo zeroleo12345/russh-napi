@@ -16,11 +16,6 @@ on:
     types: [opened, synchronize, labeled]
 
 
-permissions:
-  id-token: write  # Required for OIDC
-  contents: read
-
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -210,6 +205,9 @@ jobs:
         github.event_name == 'push' &&
         github.ref_protected || startsWith(github.ref, 'refs/tags/v')
       )
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: read
     steps:
       - name: Set node repository
         uses: actions/setup-node@v4
