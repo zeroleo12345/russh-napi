@@ -85,7 +85,7 @@ jobs:
             target: aarch64-pc-windows-msvc
             build: yarn build --target aarch64-pc-windows-msvc
 
-    name: ${{ matrix.settings.target }}
+    name: Build-${{ matrix.settings.target }}
     runs-on: ${{ matrix.settings.host }}
     needs:
       - Lint
@@ -151,7 +151,6 @@ jobs:
 
 
   Pack:
-    name: pack
     runs-on: ubuntu-latest
     needs:
       - Build
