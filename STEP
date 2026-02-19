@@ -15,4 +15,15 @@ yarn install
 yarn build --target aarch64-apple-darwin
 
 cp  russh.darwin-arm64.node  ~/github/tabby_project/tabby/app/node_modules/russh/
+# 使用 CI package.zip:  xattr -dr com.apple.quarantine ~/github/tabby_project/tabby/app/node_modules/russh
+```
+
+
+## 发布到 npmjs.org: russh-napi
+``` bash
+npm login
+
+npm whoami
+
+npm publish ./package.zip --access public     #  npm 会读取 tarball 里的 package/package.json
 ```
