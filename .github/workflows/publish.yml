@@ -1,4 +1,4 @@
-name: CI
+name: Build and Publish to npm
 
 
 env:
@@ -14,6 +14,11 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+'  # tag format: vX.X.X
   pull_request:
     types: [opened, synchronize, labeled]
+
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
 
 
 concurrency:
@@ -161,6 +166,7 @@ jobs:
         with:
           node-version: 20
           cache: yarn
+          registry-url: https://registry.npmjs.org/
       - name: Install dependencies
         run: yarn install
 
@@ -204,20 +210,23 @@ jobs:
         github.event_name == 'push' &&
         github.ref_protected || startsWith(github.ref, 'refs/tags/v')
       )
-    permissions:
-      contents: read
-      id-token: write
     steps:
+      - name: Set node repository
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
       - name: Download package artifact
         uses: actions/download-artifact@v4
         with:
           name: package
           path: dist
 
-      - name: Show package files
-        run: ls -lah dist
-
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ''
         run: |
-          npm publish dist/*.tgz --access public
+          ls -al dist
+          cd dist
+          npm publish ./*.tgz --provenance --access public
