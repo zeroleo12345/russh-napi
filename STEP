@@ -25,5 +25,7 @@ npm login
 
 npm whoami
 
-npm publish ./package.zip --access public     #  npm 会读取 tarball 里的 package/package.json
+# 从 Github Action 下载 package.zip
+jieya package.zip
+npm publish ./rustssh-9.0.0.tgz  --access public     #  npm 会读取 tarball 里的 package/package.json
 ```
