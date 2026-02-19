@@ -33,5 +33,5 @@ npm publish ./rustssh2-9.0.0.tgz  --access public     #  npm 会读取 tarball �
 
 - release by CI trigger
 ``` bash
-git_tag_push v0.0.8
+git_tag_push v9.0.0
 ```
