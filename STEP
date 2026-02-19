@@ -29,3 +29,9 @@ npm whoami
 jieya package.zip
 npm publish ./rustssh2-9.0.0.tgz  --access public     #  npm 会读取 tarball 里的 package/package.json
 ```
+
+
+- release by CI trigger
+``` bash
+git_tag_push v0.0.8
+```
