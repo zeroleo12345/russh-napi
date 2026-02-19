@@ -1,0 +1,37 @@
+## 编译 russh
+``` bash
+git clone git@github.com:zeroleo12345/russh.git
+
+mise use -g rust@1.88
+
+rm -rf target  && cargo build --verbose
+```
+
+
+## 编译 russh-napi
+``` bash
+yarn install
+
+yarn build --target aarch64-apple-darwin
+
+cp  russh.darwin-arm64.node  ~/github/tabby_project/tabby/app/node_modules/russh/
+# 使用 CI package.zip:  xattr -dr com.apple.quarantine ~/github/tabby_project/tabby/app/node_modules/russh
+```
+
+
+## 发布到 npmjs.org: russh-napi
+``` bash
+npm login
+
+npm whoami
+
+# 从 Github Action 下载 package.zip
+jieya package.zip
+npm publish ./rustssh2-9.0.0.tgz  --access public     #  npm 会读取 tarball 里的 package/package.json
+```
+
+
+- release by CI trigger
+``` bash
+git_tag_push v9.0.0
+```

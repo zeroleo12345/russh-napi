@@ -9,7 +9,7 @@ use tokio::sync::Mutex;
 use crate::error::WrappedError;
 use crate::sftp::SftpChannel;
 
-type ChannelType = russh::Channel<russh::client::Msg>;
+type ChannelType = rustssh2::Channel<rustssh2::client::Msg>;
 
 #[napi]
 pub struct NewSshChannel(Arc<Mutex<Option<ChannelType>>>);

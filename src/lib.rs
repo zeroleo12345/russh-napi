@@ -11,9 +11,9 @@ use napi::bindgen_prelude::{Promise, Uint8Array};
 use napi::module_init;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
-use russh::client::{AuthResult, DisconnectReason};
-use russh::keys::key::PrivateKeyWithHashAlg;
-use russh::{ChannelId, MethodSet};
+use rustssh2::client::{AuthResult, DisconnectReason};
+use rustssh2::keys::key::PrivateKeyWithHashAlg;
+use rustssh2::{ChannelId, MethodSet};
 use tokio::sync::Mutex;
 
 use error::WrappedError;
@@ -52,7 +52,7 @@ pub struct SSHClientHandler {
 
 #[napi]
 pub fn supported_ciphers() -> Vec<String> {
-    russh::cipher::ALL_CIPHERS
+    rustssh2::cipher::ALL_CIPHERS
         .iter()
         .map(|x| x.as_ref().to_string())
         .collect()
@@ -60,7 +60,7 @@ pub fn supported_ciphers() -> Vec<String> {
 
 #[napi]
 pub fn supported_kex_algorithms() -> Vec<String> {
-    russh::kex::ALL_KEX_ALGORITHMS
+    rustssh2::kex::ALL_KEX_ALGORITHMS
         .iter()
         .map(|x| x.as_ref().to_string())
         .collect()
@@ -68,7 +68,7 @@ pub fn supported_kex_algorithms() -> Vec<String> {
 
 #[napi]
 pub fn supported_macs() -> Vec<String> {
-    russh::mac::ALL_MAC_ALGORITHMS
+    rustssh2::mac::ALL_MAC_ALGORITHMS
         .iter()
         .map(|x| x.as_ref().to_string())
         .collect()
@@ -76,7 +76,7 @@ pub fn supported_macs() -> Vec<String> {
 
 #[napi]
 pub fn supported_compression_algorithms() -> Vec<String> {
-    russh::compression::ALL_COMPRESSION_ALGORITHMS
+    rustssh2::compression::ALL_COMPRESSION_ALGORITHMS
         .iter()
         .map(|x| x.as_ref().to_string())
         .collect()
@@ -84,18 +84,18 @@ pub fn supported_compression_algorithms() -> Vec<String> {
 
 #[napi]
 pub fn supported_key_types() -> Vec<String> {
-    russh::keys::key::ALL_KEY_TYPES
+    rustssh2::keys::key::ALL_KEY_TYPES
         .iter()
         .map(|x| x.as_ref().to_string())
         .collect()
 }
 
-impl russh::client::Handler for SSHClientHandler {
+impl rustssh2::client::Handler for SSHClientHandler {
     type Error = WrappedError;
 
     async fn check_server_key(
         &mut self,
-        server_public_key: &russh::keys::PublicKey,
+        server_public_key: &rustssh2::keys::PublicKey,
     ) -> Result<bool, Self::Error> {
         let response = self
             .server_key_callback
@@ -110,7 +110,7 @@ impl russh::client::Handler for SSHClientHandler {
         &mut self,
         channel: ChannelId,
         data: &[u8],
-        _session: &mut russh::client::Session,
+        _session: &mut rustssh2::client::Session,
     ) -> Result<(), Self::Error> {
         self.data_callback.call(
             Ok((channel.into(), data.into())),
@@ -124,7 +124,7 @@ impl russh::client::Handler for SSHClientHandler {
         channel: ChannelId,
         ext: u32,
         data: &[u8],
-        _session: &mut russh::client::Session,
+        _session: &mut rustssh2::client::Session,
     ) -> Result<(), Self::Error> {
         self.extended_data_callback.call(
             Ok((channel.into(), ext, data.into())),
@@ -136,7 +136,7 @@ impl russh::client::Handler for SSHClientHandler {
     async fn channel_eof(
         &mut self,
         channel: ChannelId,
-        _session: &mut russh::client::Session,
+        _session: &mut rustssh2::client::Session,
     ) -> Result<(), Self::Error> {
         self.eof_callback
             .call(Ok(channel.into()), ThreadsafeFunctionCallMode::NonBlocking);
@@ -146,7 +146,7 @@ impl russh::client::Handler for SSHClientHandler {
     async fn channel_close(
         &mut self,
         channel: ChannelId,
-        _session: &mut russh::client::Session,
+        _session: &mut rustssh2::client::Session,
     ) -> Result<(), Self::Error> {
         self.close_callback
             .call(Ok(channel.into()), ThreadsafeFunctionCallMode::NonBlocking);
@@ -169,10 +169,10 @@ impl russh::client::Handler for SSHClientHandler {
 
     async fn server_channel_open_x11(
         &mut self,
-        channel: russh::Channel<russh::client::Msg>,
+        channel: rustssh2::Channel<rustssh2::client::Msg>,
         originator_address: &str,
         originator_port: u32,
-        _session: &mut russh::client::Session,
+        _session: &mut rustssh2::client::Session,
     ) -> Result<(), Self::Error> {
         self.x11_channel_open_callback.call(
             Ok((channel.into(), originator_address.into(), originator_port)),
@@ -183,12 +183,12 @@ impl russh::client::Handler for SSHClientHandler {
 
     async fn server_channel_open_forwarded_tcpip(
         &mut self,
-        channel: russh::Channel<russh::client::Msg>,
+        channel: rustssh2::Channel<rustssh2::client::Msg>,
         connected_address: &str,
         connected_port: u32,
         originator_address: &str,
         originator_port: u32,
-        _session: &mut russh::client::Session,
+        _session: &mut rustssh2::client::Session,
     ) -> Result<(), Self::Error> {
         self.tcpip_channel_open_callback.call(
             Ok((
@@ -205,8 +205,8 @@ impl russh::client::Handler for SSHClientHandler {
 
     async fn server_channel_open_agent_forward(
         &mut self,
-        channel: russh::Channel<russh::client::Msg>,
-        _session: &mut russh::client::Session,
+        channel: rustssh2::Channel<rustssh2::client::Msg>,
+        _session: &mut rustssh2::client::Session,
     ) -> Result<(), Self::Error> {
         self.agent_channel_open_callback
             .call(Ok(channel.into()), ThreadsafeFunctionCallMode::NonBlocking);
@@ -216,7 +216,7 @@ impl russh::client::Handler for SSHClientHandler {
     async fn auth_banner(
         &mut self,
         banner: &str,
-        _session: &mut russh::client::Session,
+        _session: &mut rustssh2::client::Session,
     ) -> Result<(), Self::Error> {
         self.banner_callback
             .call(Ok(banner.into()), ThreadsafeFunctionCallMode::NonBlocking);
@@ -231,8 +231,8 @@ pub struct KeyboardInteractiveAuthenticationPrompt {
     pub echo: bool,
 }
 
-impl From<russh::client::Prompt> for KeyboardInteractiveAuthenticationPrompt {
-    fn from(p: russh::client::Prompt) -> Self {
+impl From<rustssh2::client::Prompt> for KeyboardInteractiveAuthenticationPrompt {
+    fn from(p: rustssh2::client::Prompt) -> Self {
         KeyboardInteractiveAuthenticationPrompt {
             prompt: p.prompt,
             echo: p.echo,
@@ -258,12 +258,12 @@ impl KeyboardInteractiveAuthenticationState {
     }
 }
 
-impl From<russh::client::KeyboardInteractiveAuthResponse>
+impl From<rustssh2::client::KeyboardInteractiveAuthResponse>
     for KeyboardInteractiveAuthenticationState
 {
-    fn from(r: russh::client::KeyboardInteractiveAuthResponse) -> Self {
+    fn from(r: rustssh2::client::KeyboardInteractiveAuthResponse) -> Self {
         match r {
-            russh::client::KeyboardInteractiveAuthResponse::Success => {
+            rustssh2::client::KeyboardInteractiveAuthResponse::Success => {
                 KeyboardInteractiveAuthenticationState {
                     state: "success".into(),
                     remaining_methods: vec![],
@@ -273,7 +273,7 @@ impl From<russh::client::KeyboardInteractiveAuthResponse>
                     name: None,
                 }
             }
-            russh::client::KeyboardInteractiveAuthResponse::Failure {
+            rustssh2::client::KeyboardInteractiveAuthResponse::Failure {
                 remaining_methods,
                 partial_success,
             } => KeyboardInteractiveAuthenticationState {
@@ -284,7 +284,7 @@ impl From<russh::client::KeyboardInteractiveAuthResponse>
                 prompts: None,
                 name: None,
             },
-            russh::client::KeyboardInteractiveAuthResponse::InfoRequest {
+            rustssh2::client::KeyboardInteractiveAuthResponse::InfoRequest {
                 name,
                 instructions,
                 prompts,
@@ -329,7 +329,7 @@ impl From<AuthResult> for SshAuthResult {
 
 #[napi]
 pub struct SshClient {
-    handle: Arc<Mutex<russh::client::Handle<SSHClientHandler>>>,
+    handle: Arc<Mutex<rustssh2::client::Handle<SSHClientHandler>>>,
 }
 
 #[napi]
@@ -367,7 +367,7 @@ impl SshClient {
         key: &SshKeyPair,
         hash_algorithm: Option<HashAlgorithm>,
     ) -> napi::Result<SshAuthResult> {
-        let mut handle: tokio::sync::MutexGuard<'_, russh::client::Handle<SSHClientHandler>> =
+        let mut handle: tokio::sync::MutexGuard<'_, rustssh2::client::Handle<SSHClientHandler>> =
             self.handle.lock().await;
         let hash_algorithm = match hash_algorithm {
             Some(x) => x.into(),
@@ -514,7 +514,7 @@ impl SshClient {
     pub async fn disconnect(&self) -> napi::Result<()> {
         let handle = self.handle.lock().await;
         handle
-            .disconnect(russh::Disconnect::ByApplication, "", "")
+            .disconnect(rustssh2::Disconnect::ByApplication, "", "")
             .await
             .map_err(WrappedError::from)?;
         Ok(())
@@ -559,20 +559,20 @@ pub async fn connect(
         banner_callback,
     };
 
-    let mut preferred = russh::Preferred::DEFAULT.clone();
+    let mut preferred = rustssh2::Preferred::DEFAULT.clone();
     if let Some(cipher_algos) = cipher_algos {
         preferred.cipher = cipher_algos
             .into_iter()
-            .filter_map(|x| russh::cipher::Name::try_from(&x[..]).ok())
+            .filter_map(|x| rustssh2::cipher::Name::try_from(&x[..]).ok())
             .collect();
     }
     if let Some(kex_algos) = kex_algos {
         preferred.kex = kex_algos
             .into_iter()
-            .filter_map(|x| russh::kex::Name::try_from(&x[..]).ok())
+            .filter_map(|x| rustssh2::kex::Name::try_from(&x[..]).ok())
             .chain([
-                russh::kex::EXTENSION_SUPPORT_AS_CLIENT,
-                russh::kex::EXTENSION_OPENSSH_STRICT_KEX_AS_CLIENT,
+                rustssh2::kex::EXTENSION_SUPPORT_AS_CLIENT,
+                rustssh2::kex::EXTENSION_OPENSSH_STRICT_KEX_AS_CLIENT,
             ])
             .collect();
     }
@@ -580,24 +580,24 @@ pub async fn connect(
         preferred.key = Cow::Owned(
             key_algos
                 .into_iter()
-                .filter_map(|x| russh::keys::Algorithm::from_str(&x[..]).ok())
+                .filter_map(|x| rustssh2::keys::Algorithm::from_str(&x[..]).ok())
                 .collect(),
         );
     }
     if let Some(mac_algos) = mac_algos {
         preferred.mac = mac_algos
             .into_iter()
-            .filter_map(|x| russh::mac::Name::try_from(&x[..]).ok())
+            .filter_map(|x| rustssh2::mac::Name::try_from(&x[..]).ok())
             .collect();
     }
     if let Some(compression_algos) = compression_algos {
         preferred.compression = compression_algos
             .into_iter()
-            .filter_map(|x| russh::compression::Name::try_from(&x[..]).ok())
+            .filter_map(|x| rustssh2::compression::Name::try_from(&x[..]).ok())
             .collect();
     }
 
-    let cfg = russh::client::Config {
+    let cfg = rustssh2::client::Config {
         preferred,
         keepalive_interval: keepalive_interval_seconds.map(|x| Duration::from_secs(x as u64)),
         keepalive_max: keepalive_max as usize,
@@ -611,7 +611,7 @@ pub async fn connect(
         ));
     };
 
-    let connection_fut = russh::client::connect_stream(Arc::new(cfg), transport, handler);
+    let connection_fut = rustssh2::client::connect_stream(Arc::new(cfg), transport, handler);
     let handle = if let Some(connection_timeout_seconds) = connection_timeout_seconds {
         tokio::time::timeout(
             Duration::from_secs(connection_timeout_seconds as u64),

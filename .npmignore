@@ -14,3 +14,4 @@ tsconfig.json
 .cargo
 .git*
 build*
+STEP

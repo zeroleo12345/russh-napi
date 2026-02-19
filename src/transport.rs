@@ -22,7 +22,7 @@ pub struct SshTransport(Arc<Mutex<Option<SshTransportInner>>>);
 pub(crate) enum SshTransportInner {
     Socket(TcpStream),
     Command(Child),
-    SshChannel(russh::ChannelStream<russh::client::Msg>),
+    SshChannel(rustssh2::ChannelStream<rustssh2::client::Msg>),
     SocksProxy(tokio_socks::tcp::socks5::Socks5Stream<TcpStream>),
 }
 
