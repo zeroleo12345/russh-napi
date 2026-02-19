@@ -98,6 +98,7 @@ jobs:
         with:
           node-version: 20
           cache: yarn
+          registry-url: https://registry.npmjs.org/
       # - name: Install
       #   uses: dtolnay/rust-toolchain@stable
       #   if: ${{ !matrix.settings.docker }}
@@ -219,11 +220,8 @@ jobs:
         with:
           name: package
           path: dist
-
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ''
         run: |
           ls -al dist
           cd dist
