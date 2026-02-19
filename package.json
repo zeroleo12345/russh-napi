@@ -1,6 +1,6 @@
 {
   "name": "rustssh2",
-  "version": "9.0.0",
+  "version": "0.0.1",
   "main": "lib/index.js",
   "license": "Apache-2.0",
   "dependencies": {
@@ -24,5 +24,9 @@
   },
   "peerDependencies": {
     "rxjs": "^7"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeroleo12345/russh-napi.git"
+   }
 }

@@ -1,4 +1,4 @@
-name: CI
+name: Build and Publish to npm
 
 
 env:
@@ -25,10 +25,7 @@ jobs:
   Lint:
     runs-on: ubuntu-latest
     if: >
-      (
-        github.event_name == 'push' &&
-        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-      ) ||
+      startsWith(github.ref, 'refs/tags/v') ||
       (
         github.event_name == 'pull_request' &&
         contains(github.event.pull_request.labels.*.name, 'enhancement')
@@ -91,7 +88,7 @@ jobs:
       - Lint
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
@@ -155,7 +152,7 @@ jobs:
     needs:
       - Build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v4
         with:
@@ -170,11 +167,7 @@ jobs:
           merge-multiple: true
 
       - name: Bump version in package.json
-        if: >
-          (
-            github.event_name == 'push' &&
-            github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-          )
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           npm version ${{ github.ref_name }} --no-git-tag-version
 
@@ -199,25 +192,24 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - Pack
-    if: >
-      (
-        github.event_name == 'push' &&
-        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-      )
+    if: startsWith(github.ref, 'refs/tags/v')
     permissions:
+      id-token: write  # Required for OIDC
       contents: read
-      id-token: write
     steps:
+      - name: Set node repository
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org/'
       - name: Download package artifact
         uses: actions/download-artifact@v4
         with:
           name: package
           path: dist
-
-      - name: Show package files
-        run: ls -lah dist
-
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
         run: |
-          npm publish dist/*.tgz --access public
+          ls -al dist
+          cd dist
+          npm publish ./*.tgz --provenance --access public
