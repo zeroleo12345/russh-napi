@@ -26,8 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       (
-        github.event_name == 'push' &&
-        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
+        github.event_name == 'push' || startsWith(github.ref, 'refs/tags/v')
       ) ||
       (
         github.event_name == 'pull_request' &&
@@ -174,8 +173,7 @@ jobs:
       - name: Bump version in package.json
         if: >
           (
-            github.event_name == 'push' &&
-            github.ref_protected || startsWith(github.ref, 'refs/tags/v')
+            github.event_name == 'push' || startsWith(github.ref, 'refs/tags/v')
           )
         run: |
           npm version ${{ github.ref_name }} --no-git-tag-version
@@ -203,8 +201,7 @@ jobs:
       - Pack
     if: >
       (
-        github.event_name == 'push' &&
-        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
+        github.event_name == 'push' || startsWith(github.ref, 'refs/tags/v')
       )
     permissions:
       id-token: write  # Required for OIDC
