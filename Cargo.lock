@@ -1924,9 +1924,9 @@ dependencies = [
 
 [[package]]
 name = "rustssh2"
-version = "9.0.0"
+version = "8.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c3362c60fd7aedb01fae94a0eb72a5cb5a4e18dabf711c5ed6dec3a253bb25d"
+checksum = "6424b2958147ae55cd73994a73b1552f6b730b9db24cebde57a4bab13c2d7387"
 dependencies = [
  "aes",
  "bitflags",

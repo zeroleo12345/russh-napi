@@ -1,18 +1,8 @@
-## 编译 russh
-``` bash
-git clone git@github.com:zeroleo12345/russh.git
-
-mise use -g rust@1.88
-
-rm -rf target  && cargo build --verbose
-```
-
-
-## 编译 russh-napi
+## 编译 russh-napi (自动编译russh)
 ``` bash
 yarn install
 
-yarn build --target aarch64-apple-darwin
+yarn build --target aarch64-apple-darwin    # Cargo.toml 和 Cargo.lock
 
 cp  russh.darwin-arm64.node  ~/github/tabby_project/tabby/app/node_modules/russh/
 # 使用 CI package.zip:  xattr -dr com.apple.quarantine ~/github/tabby_project/tabby/app/node_modules/russh
