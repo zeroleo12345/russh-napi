@@ -25,10 +25,7 @@ jobs:
   Lint:
     runs-on: ubuntu-latest
     if: >
-      (
-        github.event_name == 'push' &&
-        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-      ) ||
+      startsWith(github.ref, 'refs/tags/v') ||
       (
         github.event_name == 'pull_request' &&
         contains(github.event.pull_request.labels.*.name, 'enhancement')
