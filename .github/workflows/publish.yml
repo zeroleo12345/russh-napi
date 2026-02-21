@@ -3,7 +3,7 @@ name: Publish to npm
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'  # tag format: vX.X.X
+      - 'v*.*.*'  # tag format: vX.X.X
 
 permissions:
   id-token: write  # Required for OIDC
@@ -28,5 +28,8 @@ jobs:
 
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ''
         run: |
+          npm config delete //registry.npmjs.org/:_authToken || true
           npm publish --provenance --access public
