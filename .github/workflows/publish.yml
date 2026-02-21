@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org/'
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Bump version in package.json
         run: |
@@ -29,7 +29,6 @@ jobs:
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
         env:
-          NODE_AUTH_TOKEN: ''
+          NPM_CONFIG_PROVENANCE: true
         run: |
-          npm config delete //registry.npmjs.org/:_authToken || true
-          npm publish --provenance --access public
+          npm publish --access public
