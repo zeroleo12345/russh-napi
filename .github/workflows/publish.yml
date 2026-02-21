@@ -28,7 +28,5 @@ jobs:
 
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
-        env:
-          NPM_CONFIG_PROVENANCE: true
         run: |
           npm publish --access public
