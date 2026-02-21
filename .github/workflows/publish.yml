@@ -29,4 +29,4 @@ jobs:
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
         run: |
-          npm publish --access public
+          npm publish --provenance --access public

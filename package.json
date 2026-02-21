@@ -24,8 +24,8 @@
   "peerDependencies": {
     "rxjs": "^7"
   },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeroleo12345/russh-napi.git"
   }
 }
