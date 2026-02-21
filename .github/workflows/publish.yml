@@ -91,14 +91,13 @@ jobs:
       - Lint
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
         with:
           node-version: 20
           cache: yarn
-          registry-url: https://registry.npmjs.org/
       # - name: Install
       #   uses: dtolnay/rust-toolchain@stable
       #   if: ${{ !matrix.settings.docker }}
@@ -156,13 +155,12 @@ jobs:
     needs:
       - Build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: yarn
-          registry-url: https://registry.npmjs.org/
       - name: Install dependencies
         run: yarn install
 
@@ -211,10 +209,10 @@ jobs:
       contents: read
     steps:
       - name: Set node repository
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org/'
       - name: Download package artifact
         uses: actions/download-artifact@v4
         with:
