@@ -29,4 +29,5 @@ jobs:
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
         run: |
-          npm publish
+          npm config delete //registry.npmjs.org/:_authToken || true
+          npm publish --provenance --access public
