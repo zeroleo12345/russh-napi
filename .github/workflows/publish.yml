@@ -170,11 +170,7 @@ jobs:
           merge-multiple: true
 
       - name: Bump version in package.json
-        if: >
-          (
-            github.event_name == 'push' &&
-            github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-          )
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           npm version ${{ github.ref_name }} --no-git-tag-version
 
@@ -199,11 +195,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - Pack
-    if: >
-      (
-        github.event_name == 'push' &&
-        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-      )
+    if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       id-token: write  # Required for OIDC
       contents: read
