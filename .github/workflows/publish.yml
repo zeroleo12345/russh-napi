@@ -1,228 +1,32 @@
-name: Build and Publish to npm
-
-
-env:
-  DEBUG: napi:*
-  APP_NAME: russh
-  MACOSX_DEPLOYMENT_TARGET: '10.13'
-  CARGO_INCREMENTAL: '1'
-
+name: Publish to npm
 
 on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'  # tag format: vX.X.X
-  pull_request:
-    types: [opened, synchronize, labeled]
 
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
 
 jobs:
-  Lint:
+  publish:
     runs-on: ubuntu-latest
-    if: >
-      (
-        github.event_name == 'push' &&
-        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-      ) ||
-      (
-        github.event_name == 'pull_request' &&
-        contains(github.event.pull_request.labels.*.name, 'enhancement')
-      )
     steps:
-      - run: echo "Lint skipped"
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-
-  Build:
-    strategy:
-      fail-fast: false
-      matrix:
-        settings:
-          - host: macos-latest
-            target: x86_64-apple-darwin
-            build: yarn build --target x86_64-apple-darwin
-          - host: windows-latest
-            build: yarn build --target x86_64-pc-windows-msvc
-            target: x86_64-pc-windows-msvc
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-            build: |-
-              rustup target add x86_64-unknown-linux-gnu
-              yarn build --target x86_64-unknown-linux-gnu
-          # - host: ubuntu-latest
-          #   target: x86_64-unknown-linux-musl
-          #   docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-          #   build: yarn build --target x86_64-unknown-linux-musl
-          - host: macos-latest
-            target: aarch64-apple-darwin
-            build: yarn build --target aarch64-apple-darwin
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
-            build: |-
-              rustup target add aarch64-unknown-linux-gnu
-              yarn build --target aarch64-unknown-linux-gnu
-          - host: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
-            setup: |
-              sudo apt-get update
-              sudo apt-get install gcc-arm-linux-gnueabihf -y
-            build: |
-              yarn build --target armv7-unknown-linux-gnueabihf
-          # - host: ubuntu-latest
-          #   target: aarch64-unknown-linux-musl
-          #   docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-          #   build: |-
-          #     set -e &&
-          #     rustup target add aarch64-unknown-linux-musl &&
-          #     yarn build --target aarch64-unknown-linux-musl
-          - host: windows-latest
-            target: aarch64-pc-windows-msvc
-            build: yarn build --target aarch64-pc-windows-msvc
-
-    name: Build-${{ matrix.settings.target }}
-    runs-on: ${{ matrix.settings.host }}
-    needs:
-      - Lint
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup node
-        uses: actions/setup-node@v4
-        if: ${{ !matrix.settings.docker }}
-        with:
-          node-version: 20
-          cache: yarn
-          registry-url: https://registry.npmjs.org/
-      # - name: Install
-      #   uses: dtolnay/rust-toolchain@stable
-      #   if: ${{ !matrix.settings.docker }}
-      #   with:
-      #     toolchain: stable
-      #     targets: ${{ matrix.settings.target }}
-      - name: Install rust target
-        run: rustup target add ${{ matrix.settings.target }}
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            .cargo-cache
-            target/
-          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
-      - uses: goto-bus-stop/setup-zig@v2
-        if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
-        with:
-          version: 0.13.0
-      - name: Setup toolchain
-        run: ${{ matrix.settings.setup }}
-        if: ${{ matrix.settings.setup }}
-        shell: bash
-      - name: Install dependencies
-        run: yarn install
-      - name: Build in docker
-        if: ${{ matrix.settings.docker }}
-        run: |
-          docker run --rm \
-            --user 0:0 \
-            -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
-            -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
-            -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
-            -v ${{ github.workspace }}:/build \
-            -w /build \
-            ${{ matrix.settings.docker }} \
-            bash -lc '${{ matrix.settings.build }}'
-      - name: Build
-        run: ${{ matrix.settings.build }}
-        if: ${{ !matrix.settings.docker }}
-        shell: bash
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bindings-${{ matrix.settings.target }}
-          path: ${{ env.APP_NAME }}.*.node
-          if-no-files-found: error
-
-
-  Pack:
-    runs-on: ubuntu-latest
-    needs:
-      - Build
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup node
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: yarn
-          registry-url: https://registry.npmjs.org/
-      - name: Install dependencies
-        run: yarn install
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org/'
 
       - name: Bump version in package.json
-        if: >
-          (
-            github.event_name == 'push' &&
-            github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-          )
         run: |
           npm version ${{ github.ref_name }} --no-git-tag-version
 
-      - run: yarn napi build --dts lib/native.d.ts
-      - run: rm ${{ env.APP_NAME }}.node
-      - run: yarn tsc
-
-      - name: Pack
-        run: |
-          npm config set provenance true
-          npm pack
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: package
-          path: '*.tgz'
-          if-no-files-found: error
-
-
-  Publish:
-    runs-on: ubuntu-latest
-    needs:
-      - Pack
-    if: >
-      (
-        github.event_name == 'push' &&
-        github.ref_protected || startsWith(github.ref, 'refs/tags/v')
-      )
-    permissions:
-      id-token: write  # Required for OIDC
-      contents: read
-    steps:
-      - name: Set node repository
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org
-      - name: Download package artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: package
-          path: dist
       # setup OIDC between NPMJS.com and Github Action, can set it in NPM repo Settings
       - name: Publish to npm
         run: |
-          ls -al dist
-          cd dist
-          npm publish ./*.tgz --provenance --access public
+          npm publish
