@@ -1,17 +1,18 @@
 name: Publish to npm
 
+
 on:
   push:
     tags:
       - 'v*.*.*'  # tag format: vX.X.X
 
-permissions:
-  id-token: write  # Required for OIDC
-  contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
